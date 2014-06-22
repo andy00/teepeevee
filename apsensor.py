@@ -1,7 +1,17 @@
-#!/usr/bin/python
+#!/usr/bin/env python
 
+'''
+v0.2
+- Commented out calling: python gcmserver.py
+- Added calling: GCMServer.jar
+- Added function to bring up raspi Bluetooth device: BringUpBT
+
+'''
+
+import sys
 import pexpect
 import os
+import TurnOnBluetoothDev
 
 connected = False
 
@@ -57,7 +67,8 @@ class SensorTag:
 			# If notification handle is in the feedback
 			if pnum==0:
 				print 'Button was pressed'
-				os.system("python gcmserver.py")
+				#os.system("python gcmserver.py")
+				os.system("java -jar GCMServer.jar")
 		
 		return
 
@@ -65,8 +76,22 @@ class SensorTag:
 
 def main():
 	global connected
-	print '\n'
+
+	# Check hci0 and bring up if it is down
+	hci0status = TurnOnBluetoothDev.BringUpBT()
+	
+	# Check the response of bringing up hci0
+	# if it fails to bring up, exit app
+	if (hci0status==False):
+		# exit app
+		sys.exit(0)
+
+	# Else it is good to go
+	else:
+		print 'Device is UP:	hci0'
+
 	while True:
+
 		# Call SensorTag function to establish connection
 		tag = SensorTag()
 		
