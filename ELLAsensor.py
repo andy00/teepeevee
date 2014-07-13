@@ -120,7 +120,7 @@ class SensorTag:
                 			#print "SENDING MESSAGE FOR FALL ALERT:",mag
                 			dt = datetime.now()
 					dt = dt.strftime("%A, %d. %B %Y %I:%M%p")
-					logging.info (dt + ' ' + "SENDING MESSAGE FOR FALL ALERT: " + mag)
+					logging.info (dt + ' ' + "SENDING MESSAGE FOR FALL ALERT: HELP!")
 	        	        	os.system('java -jar GCMServer.jar')
 
 
@@ -133,12 +133,12 @@ class SensorTag:
 	        	        	#print "EMERGENCY ALERT:",keyStatus
 	        	        	dt = datetime.now()
 					dt = dt.strftime("%A, %d. %B %Y %I:%M%p")
-					logging.info(dt + ' ' +  "EMERGENCY ALERT: " + keyStatus)
+					logging.info(dt + ' ' +  "EMERGENCY ALERT: BUTTON 1")
         	        	elif keyStatus == 02 :
                 			#print "TALK2ME ALERT:",keyStatus
           	        	        dt = datetime.now()
 		      			dt = dt.strftime("%A, %d. %B %Y %I:%M%p")
-					logging.info (dt + ' ' + "TALK2ME ALERT: " +keyStatus)
+					logging.info (dt + ' ' + "TALK2ME ALERT: BUTTON 2")
 				
 		return
 
@@ -146,7 +146,7 @@ class SensorTag:
 
 def main():
 	global connected
-	logging.basicConfig(filename='ELLAsensor.log',level=logging.INFO)
+	logging.basicConfig(filename='/var/log/ELLAsensor.log',level=logging.INFO)
 	
 	# Check hci0 and bring up if it is down
 	hci0status = TurnOnBluetoothDev.BringUpBT()
