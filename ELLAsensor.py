@@ -1,10 +1,12 @@
 #!/usr/bin/env python
 
 '''
+v0.6
+- Added SMS
+
 v0.5
 - Changed print to console to log
 - Added time when console logging
-
 
 v0.4
 - changed filename from apsensor.py to ELLAsensor.py
@@ -20,7 +22,7 @@ v0.2
 - Added function to bring up raspi Bluetooth device: BringUpBT
 
 '''
-
+import send_sms
 import sys
 import pexpect
 import os
@@ -29,14 +31,16 @@ import time
 from datetime import datetime
 import logging
 
+#PARAMETER
 connected = False
 tosignedbyte = lambda n: float(n-0x100) if n>0x7f else float(n)
+smsTO = "+6592763100"
 
 class SensorTag:
 	def __init__(self):
 		global connected
 		# send ./gatttool -I -i hci0
-		self.sensor = pexpect.spawn('../bluez-5.19/attrib/gatttool -i hci0 -I')
+		self.sensor = pexpect.spawn('/home/pi/Downloads/bluez-5.19/attrib/gatttool -i hci0 -I')
 		
 		# expecting response "[                 ][LE]>"
 		self.sensor.expect('\[LE\]>')
@@ -121,7 +125,8 @@ class SensorTag:
                 			dt = datetime.now()
 					dt = dt.strftime("%A, %d. %B %Y %I:%M%p")
 					logging.info (dt + ' ' + "SENDING MESSAGE FOR FALL ALERT: HELP!")
-	        	        	os.system('java -jar GCMServer.jar')
+	        	        	os.system('java -jar /home/pi/Downloads/teepeevee/GCMServer.jar')
+	        	        	send_sms.send_sms_oi("SENDING MESSAGE FOR FALL ALERT: HELP!",smsTO)
 
 
 	            	# BUTTON                
