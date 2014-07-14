@@ -1,6 +1,10 @@
 #!/usr/bin/env python
 
 '''
+v0.7
+- Added Temp Read : )
+- Added upload temp to xively
+
 v0.6
 - Added SMS
 
@@ -22,6 +26,8 @@ v0.2
 - Added function to bring up raspi Bluetooth device: BringUpBT
 
 '''
+from xively_upload import sendData, initSendData
+from sensor_calcs import calcTmpTarget
 import send_sms
 import sys
 import pexpect
@@ -33,6 +39,7 @@ import logging
 
 #PARAMETER
 connected = False
+tosigned = lambda n: float(n-0x10000) if n>0x7fff else float(n)
 tosignedbyte = lambda n: float(n-0x100) if n>0x7f else float(n)
 smsTO = "+6592763100"
 
@@ -99,6 +106,8 @@ class SensorTag:
 	def notification_loop( self ):
 		global connected
 		feedback  = {}
+		
+		initSendData()
 
 		while True:
 			pnum = self.sensor.expect('Notification handle = .*? \r',timeout=None)
@@ -107,6 +116,23 @@ class SensorTag:
 			dongle_info = dongle_info.split()[3:]
 			handle = dongle_info[0]
 
+			# TEMP
+			if handle == '0x0025':
+				objT1 = int (dongle_info[3],16)
+				objT2 = int (dongle_info[2],16)
+				ambT1 = int (dongle_info[5],16)
+				ambT2 = int (dongle_info[4],16)
+				
+				objT = (objT1<<8)+objT2
+				ambT = (ambT1<<8)+ambT2
+				targetT = calcTmpTarget(objT, ambT)
+
+				dt = datetime.now()
+				dt = dt.strftime("%A, %d. %B %Y %I:%M%p")
+				logging.info (dt + ' ' +str(targetT)+' Celcius')
+				sendData(targetT)
+				time.sleep(5)
+				
 			# ACCELERATION
 			if handle == '0x0030':
 				feedback[0] = long(float.fromhex(dongle_info[2]))
