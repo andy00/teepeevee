@@ -1,6 +1,9 @@
 #!/usr/bin/env python
 
 '''
+v0.8
+- Get and send to multiple PHONES from RegID file
+
 v0.7
 - Added Temp Read : )
 - Added upload temp to xively
@@ -26,6 +29,7 @@ v0.2
 - Added function to bring up raspi Bluetooth device: BringUpBT
 
 '''
+from os import walk
 from xively_upload import sendData, initSendData
 from sensor_calcs import calcTmpTarget
 import send_sms
@@ -44,6 +48,7 @@ tosignedbyte = lambda n: float(n-0x100) if n>0x7f else float(n)
 #smsTO = "+6584027357"
 smsTO = "+6590670174"
 #smsTO = "+6592763100"
+elderlyInfo = '/home/pi/ElderInfo.txt'
 
 class SensorTag:
 	def __init__(self):
@@ -152,9 +157,16 @@ class SensorTag:
                 			#print "SENDING MESSAGE FOR FALL ALERT:",mag
                 			dt = datetime.now()
 					dt = dt.strftime("%A, %d. %B %Y %I:%M%p")
-	        	        	send_sms.send_sms_oi("SENDING MESSAGE FOR FALL ALERT: HELP!",smsTO)
+	        	        	#send_sms.send_sms_oi("SENDING MESSAGE FOR FALL ALERT: HELP!",smsTO)
 					logging.info (dt + ' ' + "SENDING MESSAGE FOR FALL ALERT: HELP!")
-	        	        	os.system('java -jar /home/pi/Downloads/teepeevee/GCMServer.jar')
+	        	        	
+	        	        	#iterate file
+	        	        	f = []
+	        	        	for (dirpath, dirnames, filenames) in walk('/home/pi/RegID'):
+	        	        		f.extend(filenames)
+	        	        		
+	        	        	for x in f:                
+	        	        		os.system('java -jar /home/pi/Downloads/teepeevee/GCMServer.jar /home/pi/RegID/' + x + ' ' + elderlyInfo)
 
 
 	            	# BUTTON                
