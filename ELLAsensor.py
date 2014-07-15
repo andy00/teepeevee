@@ -41,7 +41,9 @@ import logging
 connected = False
 tosigned = lambda n: float(n-0x10000) if n>0x7fff else float(n)
 tosignedbyte = lambda n: float(n-0x100) if n>0x7f else float(n)
-smsTO = "+6592763100"
+#smsTO = "+6584027357"
+smsTO = "+6590670174"
+#smsTO = "+6592763100"
 
 class SensorTag:
 	def __init__(self):
@@ -107,7 +109,7 @@ class SensorTag:
 		global connected
 		feedback  = {}
 		
-		initSendData()
+		#initSendData()
 
 		while True:
 			pnum = self.sensor.expect('Notification handle = .*? \r',timeout=None)
@@ -130,8 +132,8 @@ class SensorTag:
 				dt = datetime.now()
 				dt = dt.strftime("%A, %d. %B %Y %I:%M%p")
 				logging.info (dt + ' ' +str(targetT)+' Celcius')
-				sendData(targetT)
-				time.sleep(5)
+				#sendData(targetT)
+				#time.sleep(5)
 				
 			# ACCELERATION
 			if handle == '0x0030':
@@ -150,9 +152,9 @@ class SensorTag:
                 			#print "SENDING MESSAGE FOR FALL ALERT:",mag
                 			dt = datetime.now()
 					dt = dt.strftime("%A, %d. %B %Y %I:%M%p")
+	        	        	send_sms.send_sms_oi("SENDING MESSAGE FOR FALL ALERT: HELP!",smsTO)
 					logging.info (dt + ' ' + "SENDING MESSAGE FOR FALL ALERT: HELP!")
 	        	        	os.system('java -jar /home/pi/Downloads/teepeevee/GCMServer.jar')
-	        	        	send_sms.send_sms_oi("SENDING MESSAGE FOR FALL ALERT: HELP!",smsTO)
 
 
 	            	# BUTTON                
