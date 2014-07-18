@@ -1,6 +1,9 @@
 #!/usr/bin/env python
 
 '''
+v0.9
+- Added separate process for calling GCMServer.jar
+
 v0.8
 - Get and send to multiple PHONES from RegID file
 
@@ -45,9 +48,6 @@ import logging
 connected = False
 tosigned = lambda n: float(n-0x10000) if n>0x7fff else float(n)
 tosignedbyte = lambda n: float(n-0x100) if n>0x7f else float(n)
-#smsTO = "+6584027357"
-smsTO = "+6590670174"
-#smsTO = "+6592763100"
 elderlyInfo = '/home/pi/ElderInfo.txt'
 
 class SensorTag:
@@ -112,6 +112,8 @@ class SensorTag:
 
 	def notification_loop( self ):
 		global connected
+		global NotificationsCounter
+		global FallNotificationsCounter
 		feedback  = {}
 		
 		#initSendData()
@@ -124,7 +126,7 @@ class SensorTag:
 			handle = dongle_info[0]
 
 			# TEMP
-			if handle == '0x0025':
+			'''if handle == '0x0025':
 				objT1 = int (dongle_info[3],16)
 				objT2 = int (dongle_info[2],16)
 				ambT1 = int (dongle_info[5],16)
@@ -137,9 +139,10 @@ class SensorTag:
 				dt = datetime.now()
 				dt = dt.strftime("%A, %d. %B %Y %I:%M%p")
 				logging.info (dt + ' ' +str(targetT)+' Celcius')
+				#os.system('python sendData targetT')
 				#sendData(targetT)
 				#time.sleep(5)
-				
+			'''	
 			# ACCELERATION
 			if handle == '0x0030':
 				feedback[0] = long(float.fromhex(dongle_info[2]))
@@ -160,17 +163,20 @@ class SensorTag:
 	        	        	#send_sms.send_sms_oi("SENDING MESSAGE FOR FALL ALERT: HELP!",smsTO)
 					logging.info (dt + ' ' + "SENDING MESSAGE FOR FALL ALERT: HELP!")
 	        	        	
+					file = open('/home/pi/FallNotifications/'+ str(FallNotificationsCounter), 'w+')
+					FallNotificationsCounter = FallNotificationsCounter+1
+	        	        	
 	        	        	#iterate file
-	        	        	f = []
-	        	        	for (dirpath, dirnames, filenames) in walk('/home/pi/RegID'):
-	        	        		f.extend(filenames)
+	        	        	#f = []
+	        	        	#for (dirpath, dirnames, filenames) in walk('/home/pi/RegID'):
+	        	        	#	f.extend(filenames)
 	        	        		
-	        	        	for x in f:                
-	        	        		os.system('java -jar /home/pi/Downloads/teepeevee/GCMServer.jar /home/pi/RegID/' + x + ' ' + elderlyInfo)
+	        	        	#for x in f:                
+	        	        	#	os.system('java -jar /home/pi/Downloads/teepeevee/GCMServer.jar /home/pi/RegID/' + x + ' ' + elderlyInfo + ' &')
 
 
 	            	# BUTTON                
-           		elif handle == '0x006b':
+           		if handle == '0x006b':
 	        	    	#keyStatus = long(float.fromhex(dongle_info[2]))
         	        	keyStatus = int(dongle_info[2])
 		                #print "Key Status", keyStatus
@@ -179,7 +185,18 @@ class SensorTag:
 	        	        	dt = datetime.now()
 					dt = dt.strftime("%A, %d. %B %Y %I:%M%p")
 					logging.info(dt + ' ' +  "EMERGENCY ALERT: BUTTON 1")
-        	        	elif keyStatus == 02 :
+					
+					file = open('/home/pi/Notifications/'+ str(NotificationsCounter), 'w+')
+					NotificationsCounter = NotificationsCounter+1
+					
+  	        	        	#f = []
+	        	        	#for (dirpath, dirnames, filenames) in walk('/home/pi/RegID'):
+	        	        	#	f.extend(filenames)
+
+	        	        	#for x in f:                
+	        	        	#	os.system('java -jar /home/pi/Downloads/teepeevee/GCMServer.jar /home/pi/RegID/' + x + ' ' + elderlyInfo + ' &')
+
+	      	        	elif keyStatus == 02:
                 			#print "TALK2ME ALERT:",keyStatus
           	        	        dt = datetime.now()
 		      			dt = dt.strftime("%A, %d. %B %Y %I:%M%p")
@@ -191,7 +208,15 @@ class SensorTag:
 
 def main():
 	global connected
+	global NotificationsCounter
+	global FallNotificationsCounter
+
+	FallNotificationsCounter = 0
+	NotificationsCounter = 0
 	logging.basicConfig(filename='/var/log/ELLAsensor.log',level=logging.INFO)
+	
+	# Call GCMServer.py
+	os.system('sudo python /home/pi/Downloads/teepeevee/GCMServer.py &')
 	
 	# Check hci0 and bring up if it is down
 	hci0status = TurnOnBluetoothDev.BringUpBT()
@@ -200,6 +225,9 @@ def main():
 	# if it fails to bring up, exit app
 	if (hci0status==False):
 		# exit app
+	      	dt = datetime.now()
+		dt = dt.strftime("%A, %d. %B %Y %I:%M%p")
+		logging.info (dt + ' ' + 'EXITING APPLICATION.')
 		sys.exit(0)
 
 	# Else it is good to go
@@ -231,7 +259,7 @@ def main():
 		
 		dt = datetime.now()
 		dt = dt.strftime("%A, %d. %B %Y %I:%M%p")
-		logging.info (dt + ' ' + 'Something went wrong. Press the SensorTag button to try pairing again.')
+		logging.info (dt + ' ' + 'Not connected to SensorTag. Press the SensorTag button to try pairing again.')
 		#raw_input("Type any key to try to connect with SensorTag...")
 		connected = False
 		
